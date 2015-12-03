@@ -1,285 +1,362 @@
-/*game 4*/
-PImage bg1,bg2,enemy,fighter,hp,treasure,start1,start2,end1,end2;
-PImage[] flame=new PImage[5];
-float Hp=197;
-float tSpeed=5;
-float hpx;//hpx=floor(random(197));
-float hpSpace=Hp/5;
-float fx=550,fy=240;
-float tx=random(41,601),ty=random(41,441);
-int bgx1=641,bgx2=0;
-int spacing=10;
-int j=0;
-float enemyWidth=61;
-float enemyHeight=61;
-float[] ex=new float[5];
-float[] ey=new float[5];
-float[] ey1=new float[5];
-float[] ey2=new float[5];
-float flameX;
-float eStartY;
-float eStartX=-5*(spacing+enemyWidth);
-int state;
-int stateGame;
+PImage bg1,bg2,enemy,fighter,hp,treasure,start1,start2,end1,end2,shoot;
+PImage[] flames=new PImage[5];
+int enemyCount = 8;
+//hp
+float Hp=197;//total hp
+float hpX;
+//figther
+float ftx,fty;
+float fSpeed;
+//treasure
+float tx,ty;
+//bg
+int bgx1,bgx2;
+//enemy
+int[] enemyX = new int[enemyCount];
+int[] enemyY = new int[enemyCount];
+//flame
+int[] currentFrame=new int[8];
+float[] fx=new float[8];
+float[] fy=new float[8];
+//shoot
+float[] sx=new float[8];
+float[] sy=new float[8];
+float sSpeed;
+//state
+int GameState;
+int EnemyState;
 final int GAME_START=0;
 final int GAME_RUN=1;
-final int GAME_LOSE=2;
-final int RUN1=0;
-final int RUN2=1;
-final int RUN3=2;
-boolean upPressed,downPressed,rightPressed,leftPressed=false;
-
-void setup()
-{
-  size(640,480);
-  hpx=hpSpace;
-  state=GAME_START;
-  stateGame=RUN1;
-  eStartY=random(0,height-enemyHeight);
-  start1=loadImage("img/start1.png");
-  start2=loadImage("img/start2.png");
-  bg1=loadImage("img/bg1.png");
-  bg2=loadImage("img/bg2.png");
-  treasure=loadImage("img/treasure.png");
-  fighter=loadImage("img/fighter.png");
-  enemy=loadImage("img/enemy.png");
-  hp=loadImage("img/hp.png");  
-  end1=loadImage("img/end1.png");
-  end2=loadImage("img/end2.png");
-  for(int i=0;i<5;i++)
-  {
-    flame[i]=loadImage("img/flame"+(i+1)+".png");
-  }
-  for(int i=0;i<5;i++)
-  {
-      ex[i]=eStartX+(enemyWidth+spacing)*i;
-  }
-  for(int i=0;i<5;i++)
-  {
-    ey[i]=eStartY;
-  }
+final int GAME_OVER=2;
+final int ENEMY_RUN1=0;
+final int ENEMY_RUN2=1;
+final int ENEMY_RUN3=2;
+//boolean
+boolean up=false,down=false,right=false,left=false;
+boolean []enemyDestory=new boolean[8];
+boolean []flamesAppear=new boolean[8];
+boolean treasureHit=false;
+boolean enemyHit=false;
+boolean bulletHit=false;
+void setup () {
+    size(640,480);
+    //image
+    start1=loadImage("img/start1.png");
+    start2=loadImage("img/start2.png");
+    bg1=loadImage("img/bg1.png");
+    bg2=loadImage("img/bg2.png");
+    treasure=loadImage("img/treasure.png");
+    fighter=loadImage("img/fighter.png");
+    enemy=loadImage("img/enemy.png");
+    hp=loadImage("img/hp.png");  
+    end1=loadImage("img/end1.png");
+    end2=loadImage("img/end2.png");
+    shoot=loadImage("img/shoot.png");
+    for(int i=0;i<5;i++)
+    {
+       flames[i]=loadImage("img/flame"+(i+1)+".png");
+    }
+    //hp
+    hpX=Hp/5;
+    //speed
+    fSpeed=5;
+    sSpeed=4;
+    //fighter
+    ftx=width-61;
+    fty=height/2;
+    //bg
+    bgx1=641;
+    bgx2=0;
+    //treasure
+    tx=random(41,601);
+    ty=random(41,441);
+    //state
+    GameState=0;
+    EnemyState=ENEMY_RUN1;
+    //
+    for(int i=0;i<8;i++)
+    {
+      enemyDestory[i]=false;
+      flamesAppear[i] = false;
+      currentFrame[i] = 0;
+    }
+    for(int i=0;i<5;i++)
+    {
+      sx[i]=-960;
+      sy[i]=-960;
+    }
+ 
 }
+
 void draw()
 {
-  switch(state)
+  switch(GameState)
   {
-    //------------------------------
     case GAME_START:
     {
-          hpx=hpSpace;
-          stateGame=RUN1;
-          eStartY=random(0,height-enemyHeight);
-          for(int i=0;i<5;i++)
-          {
-            ex[i]=eStartX+(enemyWidth+spacing)*i;
-          }
-            for(int i=0;i<5;i++)
-          {
-            ey[i]=eStartY;
-          }
-          image(start2,0,0);  
-          if(mouseX>207&&mouseX<454) //x:207-454,y:378-413
-          {
-              if(mouseY>378&&mouseY<413)
-              {
-                  image(start1,0,0);
-                  if(mousePressed)
-                    state=GAME_RUN;
-              }
-          }
-          break;
-    }
-    //------------------------------
-    case GAME_RUN:
-    {
-         //bg
-        image(bg1,bgx1-640,0);
-        bgx1+=3;
-        bgx1%=1280;
-        image(bg2,bgx2-640,0);
-        bgx2+=3;
-        bgx2%=1280;
-        //treasure
-        image(treasure,tx,ty);
-        if((fx-tx)<41&&(tx-fx)<51)
-        {
-          if((fy-ty)<41&&(ty-fy)<51)
-          {
-            tx=random(41,601);
-            ty=random(41,441);
-            hpx+=hpSpace;
-            if(hpx>=Hp)
-              hpx=Hp;
-          }
-        }
-        //fighter
-        if(upPressed)
-          fy-=tSpeed;
-        if(downPressed)
-          fy+=tSpeed;
-        if(rightPressed)
-          fx+=tSpeed;
-        if(leftPressed)
-          fx-=tSpeed;
-        
-        if(fx<0)
-          fx=0;
-        if(fx>590)
-          fx=590;
-        if(fy<0)
-          fy=0;
-        if(fy>429)
-          fy=429;
-        //hp
-        if(hpx<=0)
-          state=GAME_LOSE;
-        image(fighter,fx,fy);
-        //enemy
-        switch(stateGame)
-        {
-          case RUN1:
-            for(int i=0;i<5;i++)
-            {
-              //hit
-              if(fx-ex[i]<61&&ex[i]-fx<51)
-              {
-                 if(fy-ey[i]<61&&ey[i]-fy<51)
-                 {
-                   flameX=ex[i];
-                   ex[i]=width;
-                   hpx-=hpSpace;
-                   //flame
-                   if(frameCount%(60/10)==0)
-                   {
-                      image(flame[j],flameX,ey[i]);
-                      j++;
-                      if(j==5)
-                        j=0;
-                   }
-                 }
-              }
-              image(enemy,ex[i],ey[i]);
-            }
-            //move
-            for(int i=0;i<5;i++)
-            {
-              ex[i]+=2;
-              ey[i]=eStartY;
-            }
-            //move out
-            if(ex[0]>width&&ex[1]>width&&ex[2]>width&&ex[3]>width&&ex[4]>width)
-            {
-              eStartX=-5*(spacing+enemyWidth);
-              eStartY=random(140,height-enemyHeight); 
-              for(int i=0;i<5;i++)
-              {
-                 ex[i]=eStartX+(enemyWidth+spacing)*i;
-                 ey[i]=eStartY-30*i;
-              }
-              stateGame=RUN2;
-            }
-            break;
-           case RUN2:
-             for(int i=0;i<5;i++)
-            {
-              if(fx-ex[i]<61&&ex[i]-fx<51)
-              {
-                 if(fy-ey[i]<61&&ey[i]-fy<51)
-                 {
-                   ex[i]=width;
-                   hpx-=hpSpace;
-                 }
-              }
-              image(enemy,ex[i],ey[i]);
-            }
-            for(int i=0;i<5;i++)
-            {
-              ex[i]+=2;
-            }
-            if(ex[0]>width&&ex[1]>width&&ex[2]>width&&ex[3]>width&&ex[4]>width)
-            {
-              eStartX=-5*enemyWidth;
-              eStartY=random(0,175);
-              for(int i=0;i<5;i++)
-              {
-                  ex[i]=eStartX+enemyWidth*i;
-                  if(i<=2)
-                  {
-                    ey1[i]=eStartY+(2+i)*enemyHeight;
-                    ey2[i]=eStartY+(2-i)*enemyHeight;
-                  }
-                  if(i>2)
-                  {
-                    ey1[i]=eStartY+(i/2)*enemyHeight;
-                    ey2[i]=eStartY+(6-i)*enemyHeight;
-                  }
-               }
-              stateGame=RUN3;
-            }
-            break;
-            case RUN3:
-                for(int i=0;i<5;i++)
-                {                  
-                  if(fx-ex[i]<61&&ex[i]-fx<51)
-                  {
-                     if(fy-ey1[i]<61&&ey1[i]-fy<51)
-                     {
-                         ey1[i]=height;
-                         hpx-=hpSpace;
-                     }
-                  }
-                  if(fx-ex[i]<61&&ex[i]-fx<51)
-                  {
-                     if(fy-ey2[i]<61&&ey2[i]-fy<51)
-                     {
-                         ey2[i]=height;
-                         hpx-=hpSpace;
-                     }
-                  }
-                  image(enemy,ex[i],ey1[i]);
-                  image(enemy,ex[i],ey2[i]);
-                }
-                for(int i=0;i<5;i++)
-               {
-                  ex[i]+=2;
-               }
-               if(ex[0]>width||(ey1[0]>height&&ey1[1]>height&&ey1[2]>height&&ey1[3]>height&&ey1[4]>height&&
-               ey2[0]>height&&ey2[1]>height&&ey2[2]>height&&ey2[3]>height&&ey2[4]>height))
-               {
-                 eStartX=-5*(spacing+enemyWidth);
-                 eStartY=random(0,height-enemyHeight); 
-                 for(int i=0;i<5;i++)
-                 {
-                      ex[i]=eStartX+(enemyWidth+spacing)*i;
-                      eStartY=random(0,height-enemyHeight);
-                 }
-                 stateGame=RUN1;
-               }
-               break;
-        }
-        //rect
-        fill(255,0,0);
-        rect(41,23,hpx,20);
-        //hp
-        image(hp,30,20);
-        break;
-      }
-    //---------------
-    case GAME_LOSE:
-      image(end2,0,0);
-      if(mouseX>205&&mouseX<438)
+      image(start2,0,0);  
+      if(mouseX>207&&mouseX<454) //x:207-454,y:378-413
       {
-        if(mouseY>307&&mouseY<349)
+        if(mouseY>378&&mouseY<413)
         {
-          image(end2,0,0);
+          image(start1,0,0);
           if(mousePressed)
-            state=GAME_START;
+          {
+             GameState=GAME_RUN;
+              addEnemy(0);
+          }
         }
       }
       break;
-  } 
+    }
+    //------------------------------------------------------
+    case GAME_RUN:
+    {
+      //bg
+      image(bg1,bgx1-640,0);
+      bgx1+=3;
+      bgx1%=1280;
+      image(bg2,bgx2-640,0);
+      bgx2+=3;
+      bgx2%=1280;
+      //treasure
+      image(treasure,tx,ty);
+      treasureHit=isHit(tx,ty,41,41,ftx,fty,51,51);
+      if(treasureHit)
+      {
+         tx=random(41,601);
+         ty=random(41,441);
+         hpX+=Hp/5; 
+      }
+      //fighter move
+      if(up)
+        fty-=fSpeed;
+      if(down)
+        fty+=fSpeed;
+      if(right)
+        ftx+=fSpeed;
+      if(left)
+        ftx-=fSpeed;
+      //boundary detection
+      if(ftx<0)
+        ftx=0;
+      if(ftx>590)
+        ftx=590;
+      if(fty<0)
+        fty=0;
+      if(fty>429)
+        fty=429;
+      image(fighter,ftx,fty);
+      //hp
+      if(hpX<=0)
+      {
+        hpX=0;
+        GameState=GAME_OVER;
+      }
+      if(hpX>Hp)
+      hpX=Hp;
+      fill(255,0,0);
+      rect(41,23,hpX,20);
+      image(hp,30,20);
+      //shoot
+      for(int i=0;i<5;i++)
+      {
+        image(shoot,sx[i],sy[i]);
+        sx[i]-=sSpeed;
+        if(sx[i] < -31)
+           sx[i] =sx[i]=-960;
+      }
+      //enemyhit
+      for(int i=0;i<8;i++)
+      {
+        //enemy destory
+        for(int j= 0;j< 5;j++)
+        {
+            bulletHit=isHit(enemyX[i],enemyY[i],61,61,sx[j],sy[j],31,27);
+            if(bulletHit)
+            {
+                  sx[j] = sy[j] = -960;
+                  fx[i] = enemyX[i];
+                  fy[i] = enemyY[i];
+                  flamesAppear[i] = true;
+                  enemyDestory[i] = true;
+                  enemyX[i] = enemyY[i] = -1;
+            }
+        }
+        //enemy hit
+        enemyHit=isHit(enemyX[i],enemyY[i],61,61,ftx,fty,51,51);
+        if(enemyHit)
+        {
+               fx[i] = enemyX[i];
+               fy[i] = enemyY[i];
+               flamesAppear[i] = true;
+               enemyDestory[i] = true;
+               enemyX[i] =enemyY[i] =-1;
+               hpX-=Hp/5;
+        }  
+        //flames appear
+        if(flamesAppear[i] == true)
+        {
+           image(flames[currentFrame[i]],fx[i],fy[i]);  
+           if(frameCount % (60/10) == 0)
+           {
+             currentFrame[i]++;
+             if(currentFrame[i] == 5)
+             {
+               flamesAppear[i] = false;
+               currentFrame[i] = 0;
+             }
+           }
+        }
+      }
+      //enemymove
+      switch(EnemyState)
+      {
+        case ENEMY_RUN1:
+          enemymove();
+          enemyMoveOut(enemyX);
+          if(enemyX[0]==-1&&enemyX[1]==-1&&enemyX[2]==-1&&enemyX[3]==-1&&enemyX[4]==-1&&enemyX[5]==-1&&enemyX[6]==-1&&enemyX[7]==-1)
+          {
+            EnemyState=ENEMY_RUN2;
+            addEnemy(1);
+          }
+          break;
+        case ENEMY_RUN2:  
+          enemymove();
+          enemyMoveOut(enemyX);
+          if(enemyX[0]==-1&&enemyX[1]==-1&&enemyX[2]==-1&&enemyX[3]==-1&&enemyX[4]==-1&&enemyX[5]==-1&&enemyX[6]==-1&&enemyX[7]==-1)
+          {
+            EnemyState=ENEMY_RUN3;
+            addEnemy(2);
+          }
+          break;
+        case ENEMY_RUN3:
+          enemymove();
+          enemyMoveOut(enemyX);
+          if(enemyX[0]==-1&&enemyX[1]==-1&&enemyX[2]==-1&&enemyX[3]==-1&&enemyX[4]==-1&&enemyX[5]==-1&&enemyX[6]==-1&&enemyX[7]==-1)
+          {
+            EnemyState=ENEMY_RUN1;
+            addEnemy(0);
+          }
+          break;
+      }
+      //--------------------break-switch-------------------
+      break;
+    }
+    //------------------------------------------------------
+    case GAME_OVER:
+    {
+      image(end2,0,0);
+      if(mouseX>209&&mouseX<433)
+      {
+        if(mouseY>310&&mouseY<347)
+        {
+          image(end1,0,0);
+          if(mousePressed)
+          {
+            //hp
+            hpX=Hp/5;
+            //fighter
+            ftx=width-61;
+            fty=height/2;
+            //treasure
+            tx=random(41,601);
+            ty=random(41,441);
+            //state
+            GameState=0;
+            EnemyState=ENEMY_RUN1;
+            //
+            for(int i=0;i<8;i++)
+            {
+              enemyDestory[i]=false;
+              flamesAppear[i] = false;
+              currentFrame[i] = 0;
+            }
+            for(int i=0;i<5;i++)
+            {
+              sx[i]=-960;
+              sy[i]=-960;
+            }
+          }
+        }
+      }
+    }
+    
+    
+    
+  }
 }
 
+// 0 - straight, 1-slope, 2-dimond
+void addEnemy(int type)
+{  
+  for (int i = 0; i < enemyCount; ++i) {
+    enemyX[i] = -1;
+    enemyY[i] = -1;
+  }
+  switch (type) {
+    case 0:
+      addStraightEnemy();
+      break;
+    case 1:
+      addSlopeEnemy();
+      break;
+    case 2:
+      addDiamondEnemy();
+      break;
+  }
+}
+
+void addStraightEnemy()
+{
+  float t = random(height - enemy.height);
+  int h = int(t);
+  for (int i = 0; i < 5; ++i) {
+
+    enemyX[i] = (i+1)*-80;
+    enemyY[i] = h;
+  }
+}
+void addSlopeEnemy()
+{
+  float t = random(height - enemy.height * 5);
+  int h = int(t);
+  for (int i = 0; i < 5; ++i) {
+
+    enemyX[i] = (i+1)*-80;
+    enemyY[i] = h + i * 40;
+  }
+}
+void addDiamondEnemy()
+{
+  float t = random( enemy.height * 3 ,height - enemy.height * 3);
+  int h = int(t);
+  int x_axis = 1;
+  for (int i = 0; i < 8; ++i) {
+    if (i == 0 || i == 7) {
+      enemyX[i] = x_axis*-80;
+      enemyY[i] = h;
+      x_axis++;
+    }
+    else if (i == 1 || i == 5){
+      enemyX[i] = x_axis*-80;
+      enemyY[i] = h + 1 * 40;
+      enemyX[i+1] = x_axis*-80;
+      enemyY[i+1] = h - 1 * 40;
+      i++;
+      x_axis++;
+      
+    }
+    else {
+      enemyX[i] = x_axis*-80;
+      enemyY[i] = h + 2 * 40;
+      enemyX[i+1] = x_axis*-80;
+      enemyY[i+1] = h - 2 * 40;
+      i++;
+      x_axis++;
+    }
+  }
+}
 
 void keyPressed()
 {
@@ -288,17 +365,26 @@ void keyPressed()
     switch(keyCode)
     {
       case UP:
-        upPressed=true;
+        up=true;
         break;
       case DOWN:
-        downPressed=true;
+        down=true;
         break;
       case RIGHT:
-        rightPressed=true;
+        right=true;
         break;
       case LEFT:
-        leftPressed=true;
+        left=true;
          break;
+    }
+  }
+  if(key == ' '){
+    for(int i= 0;i<5;i++){
+      if(sy[i] == -960){
+        sx[i] = ftx+fighter.width/5;
+        sy[i] = fty+fighter.height/4;
+        break;
+      }
     }
   }
 }
@@ -309,17 +395,53 @@ void keyReleased()
     switch(keyCode)
     {
       case UP:
-        upPressed=false;
+        up=false;
         break;
       case DOWN:
-        downPressed=false;
+        down=false;
         break;
       case RIGHT:
-        rightPressed=false;
+        right=false;
         break;
       case LEFT:
-        leftPressed=false;
+        left=false;
          break;
     }
+  }
+}
+void enemymove()
+{
+    for (int i = 0; i < enemyCount; ++i)
+    {
+      if (enemyX[i] != -1 || enemyY[i] != -1) 
+      {
+        image(enemy, enemyX[i], enemyY[i]);
+        enemyX[i]+=5;
+      }
+    }
+}
+boolean isHit(float ax,float ay,float aw,float ah,float bx,float by,float bw,float bh)
+{
+  if(by<(ay+ah)&&ay<(by+bh)&&bx<(ax+aw)&&ax<(bx+bw))
+    return true;
+  else
+   return false;
+}
+boolean isHit(int ax,int ay,int aw,int ah,int bx,int by,int bw,int bh)
+{
+  if(by<(ay+ah)&&ay<(by+bh)&&bx<(ax+aw)&&ax<(bx+bw))
+    return true;
+  else
+   return false;
+}
+void enemyMoveOut(int[] enemy)
+{
+  for(int i=0;i<8;i++)
+ {
+    if(enemy[i]>width)
+    {
+      enemy[i]=-1;
+      enemyY[i]=-1;
+     }
   }
 }
